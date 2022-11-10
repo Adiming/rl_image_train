@@ -35,7 +35,7 @@ class PlaceEnvImage(gym.Env):
         #     low=-1., high=1., shape=(2,),dtype = np.float32
         # )
         self.observation_space = gym.spaces.Box(
-            np.array([-1.0,-1.0,0.0]),np.array([1.0,1.0,1.0])
+            0, 255, [480, 640 ,3] # [height, width, 3]
         )
         
         self.old_torque = np.zeros(2,dtype=np.float32)  # record the last time torque sum
@@ -58,7 +58,7 @@ class PlaceEnvImage(gym.Env):
 
         if distance >= 0 and distance<=40:   # 112/2.8 = 40
             # read a image as state from corresponding position (chose the closest one)
-            self.image_path = 
+            self.image_path = str(x) + "_" + str(y) + '.png'
             img = cv2.imread(self.image_path)
         else:
             torque_x = 0
