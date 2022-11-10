@@ -1,0 +1,7 @@
+gamma: 0.9
+lr start: 0.002
+buffer_size=20_0000
+batch_size=128
+on_goal = yes, 1 time true
+net_arch = dict(pi=[256,256],qf=[256,256])
+reward: no pulishment and reach goal 5 + (max_steps - i)*10
