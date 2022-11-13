@@ -8,7 +8,12 @@ from typing import Callable
 from stable_baselines3.common.env_checker import check_env
 import torch as th
 
-file_name="DDPG_5e5_lr1e_nrw_p10_lowp_2"
+path = os.getcwd()
+path = os.path.join(path, "models")
+
+file_name="DDPG_test_1e6_gamma09_n"
+
+file_path = os.path.join(path, file_name)
 # file_name="DDPG_test_1e6_ongoal"
 
 # single epochs
@@ -44,7 +49,7 @@ def test_train():
             net_arch=dict(pi=[256,256],qf=[256,256]))
     )
 
-    model.learn(total_timesteps=int(5e5),
+    model.learn(total_timesteps=int(1e6),
                 progress_bar=True,
                 tb_log_name=file_name
     )
@@ -100,12 +105,12 @@ def predict_and_write():
 
     env = PlaceEnv()
 
-    dir = os.getcwd()
-    # dir = os.path.join(dir,"models","1_100000_513") 
-    # dir = os.path.join(dir,"models_2","30_3000000_-681") 
-    dir = os.path.join(dir,file_name) 
+    # dir = os.getcwd()
+    # # dir = os.path.join(dir,"models","1_100000_513") 
+    # # dir = os.path.join(dir,"models_2","30_3000000_-681") 
+    # dir = os.path.join(dir,file_name) 
 
-    model = DDPG.load(dir,env=env)
+    model = DDPG.load(file_name,env=env)
     # model = PPO.load(dir,env=env)
 
     # mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)

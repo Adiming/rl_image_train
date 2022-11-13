@@ -11,9 +11,9 @@ class PlaceEnv(gym.Env):
 
     viewer = None
     dt = 1    # refresh rate
-    move_step = 8.4
-    action_bound = [-8.4, 8.4]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
-    # action_bound = [-5.6, 5.6]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
+    move_step = 16.8
+    action_bound = [-8.4, 8.4]  # the movement range is between -3mm ~ 3mm -> 5.6 = 1mm
+    # action_bound = [-5.6, 5.6]  # the movement range is between -3mm ~ 3mm -> 5.6 = 1mm
     goal_x = 300  # halb of the window's width
     goal_y = 300  # halb of the window's high
     gear_size = 112 # the radium of gear
@@ -45,8 +45,8 @@ class PlaceEnv(gym.Env):
         # torque = force * distance
         # only when the distance between (0, 70) exit the torque (112/2 + 28/2)
         # when the gear outside the peg range no torque
-        d_x = (self.goal_x - gear_info[0])/2.8
-        d_y = (gear_info[1] - self.goal_y)/2.8
+        d_x = (self.goal_x - gear_info[0])/5.6
+        d_y = (gear_info[1] - self.goal_y)/5.6
 
         distance = np.sqrt(d_x**2+d_y**2)
         if distance >= 0 and distance<=40:   # sqrt(25**2x2)=35.3
@@ -76,11 +76,11 @@ class PlaceEnv(gym.Env):
         self.on_goal = 0    # whether stay on the target
         self.threshold = 0.3
         # random initial position of gear
-        self.gear_info[0] = self.goal_x + np.random.uniform(low=-90.0,high=90.0)
-        self.gear_info[1] = self.goal_y + np.random.uniform(low=-90.0,high=90.0)
+        # self.gear_info[0] = self.goal_x + np.random.uniform(low=-90.0,high=90.0)
+        # self.gear_info[1] = self.goal_y + np.random.uniform(low=-90.0,high=90.0)
 
-        # self.gear_info[0] = self.goal_x + 112
-        # self.gear_info[1] = self.goal_y 
+        self.gear_info[0] = self.goal_x + 112
+        self.gear_info[1] = self.goal_y 
 
         # calculate the torque as state
         s,_,_,_ = self.torque_cal(self.gear_info,self.on_goal)
@@ -106,14 +106,14 @@ class PlaceEnv(gym.Env):
         step_r = 0
         if torque_sum >= self.old_torque:
             step_r = -1 # do not return
-        else:
-            step_r = (self.old_torque - torque_sum)
+        # else:
+            # step_r = (self.old_torque - torque_sum)
 
         o_t = self.old_torque
         # done and reward, gear center align with pey center
         # torque can not be used as condition since in the simulation no tolerance, absolute torque==0 is hard
         if  self.init_torque > o_t and distance<=self.threshold:
-            step_r = (5. + (self.max_steps - self.i)*1.5)    # ealier reach goal that has more reward
+            step_r = (5. + (self.max_steps - self.i)*5)    # ealier reach goal that has more reward
             self.on_goal = 1
             done = True
         if self.i == self.max_steps:
@@ -146,8 +146,8 @@ class Viewer(pyglet.window.Window):
     win_w = 600 # window size width
     win_h = 600 # window size high
 
-    peg_size = 28 # around 10cm
-    gear_size = 112 # around 40cm
+    peg_size = 28 # around 10cm, radium
+    gear_size = 112 # around 40cm, radium
 
     def __init__(self, gear_info):
         # vsync=False to not use the monitor FPS, we can speed up training

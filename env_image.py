@@ -11,7 +11,6 @@ class PlaceEnvImage(gym.Env):
     metadata = {'render.modes': ['human']}
 
     viewer = None
-    dt = 1    # refresh rate
     move_step = 8.4
     action_bound = [-8.4, 8.4]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
     # action_bound = [-5.6, 5.6]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
@@ -20,7 +19,7 @@ class PlaceEnvImage(gym.Env):
     gear_size = 112 # the radium of gear
     peg_size = 28 # the radium of peg, around 10cm
 
-    press_force = 10    # press applied on the peg
+    # press_force = 10    # press applied on the peg
     max_steps = 20 # max step pre epoch
 
     def __init__(self):
@@ -34,52 +33,60 @@ class PlaceEnvImage(gym.Env):
         # self.observation_space = gym.spaces.Box(
         #     low=-1., high=1., shape=(2,),dtype = np.float32
         # )
+        # self.observation_space = gym.spaces.Box(
+        #     0, 255, (84, 84), dtype='uint8' # [height, width, 3]
+        # )
         self.observation_space = gym.spaces.Box(
-            0, 255, [480, 640 ,3] # [height, width, 3]
-        )
-        
-        self.old_torque = np.zeros(2,dtype=np.float32)  # record the last time torque sum
+        low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
+
+        # spaces = {
+        #     # Here's an observation space for 84 wide x 84 high greyscale image inputs:
+        #     'image': gym.spaces.Box(low=0, high=255, shape=(84, 84, 1), dtype=np.uint8),
+        #     # And the x and y coordinate of gear will be set as state too
+        #     'position': gym.spaces.Box(low=-600, high=600, shape=(2,), dtype=np.float32)
+        # }
+
+        # self.observation_space = gym.spaces.Dict(spaces)
+
+        # self.old_torque = np.zeros(2,dtype=np.float32)  # record the last time torque sum
         self.image_path = os.path.join(os.getcwd(),"images")
 
-    def state_cal(self,gear_info,on_goal):
-        # calculate the torque in x and y axis which are set as reward
-        # torque = force * distance
-        # only when the distance between (0, 70) exit the torque (112/2 + 28/2)
-        # when the gear outside the peg range no torque
-        d_x = (self.goal_x - gear_info[0])/2.8
-        d_y = (gear_info[1] - self.goal_y)/2.8
+    def state_cal(self,gear_info):
+        # calculate the difference between goal center and gear center -> find the image frame
+        # 1mm = 5.6
+        d_x = (gear_info[0] - self.goal_x)
+        d_y = (self.goal_y - gear_info[1])
 
         distance = np.sqrt(d_x**2+d_y**2)
 
         # index for reading image
+        # the center point is (4,12), the point distance in row is 2mm(11.2), in colum is 5mm(28)
+        x = round(4 - d_y/28)
+        y = round(12 - d_x/11.2)
 
-        x = int(d_x + 40)
-        y = int(d_y + 40)
-
-        if distance >= 0 and distance<=40:   # 112/2.8 = 40
+        if x<=7 and y<=24 and x>=0 and y>=0:   
             # read a image as state from corresponding position (chose the closest one)
-            self.image_path = str(x) + "_" + str(y) + '.png'
-            img = cv2.imread(self.image_path)
+            img_name = str(x) + "_" + str(y) + '.png'
+            img_path = os.path.join(self.image_path, img_name)
+            img = cv2.imread(img_path)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
+            img = cv2.resize(img, (84,84), interpolation= cv2.INTER_LINEAR) # resize the image
+            img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
         else:
-            torque_x = 0
-            torque_y = 0
+            img = np.zeros((84,84,1), dtype='uint8')
 
-        # state
-        s = [torque_x,torque_y,on_goal]
+        # create observation: the capture image and the position of the gear
+        # s = {
+        #     'image': img,
+        #     'position': np.array(gear_info)
+        # }
 
-        s = np.array(s,dtype=np.float32)
-
-        # normalize the obs state -1~1, the max torque is press_force*40, 40 is max distance
-        s = np.divide(s, (self.press_force * 40.))
-
-        # torque_sum = abs(torque_x) + abs(torque_y)
-
-        return s, d_x, d_y, distance
+        return img, d_x, d_y, distance
         
     def reset(self):
         self.i = 0
         self.total_reward = 0
-        self.on_goal = 0    # whether stay on the target
+        # self.on_goal = 0    # whether stay on the target
         self.threshold = 0.3
         # random initial position of gear
         self.gear_info[0] = self.goal_x + np.random.uniform(low=-90.0,high=90.0)
@@ -88,11 +95,9 @@ class PlaceEnvImage(gym.Env):
         # self.gear_info[0] = self.goal_x + 112
         # self.gear_info[1] = self.goal_y 
 
-        # calculate the torque as state
-        s,_,_,_ = self.state_cal(self.gear_info,self.on_goal)
+        # image frame as state
+        s,_,_,_ = self.state_cal(self.gear_info)
 
-        self.old_torque = abs(s[0]) + abs(s[1]) # save as the last time torque sum
-        self.init_torque = self.old_torque  # record the initial torque sum for boudary detection
         return s
 
     def step(self, action):
@@ -101,38 +106,30 @@ class PlaceEnvImage(gym.Env):
         done = False
         action = action*self.move_step # rescale to range -8.4 ~ 8.4 -> -3mm ~ 3mm
         action = np.clip(action, *self.action_bound)
-        self.gear_info[0] += action[0] * self.dt    # x
-        self.gear_info[1] += action[1] * self.dt    # y
+        self.gear_info[0] += action[0]  # x
+        self.gear_info[1] += action[1]  # y
 
         # calculate the torque as state
-        s, d_x, d_y, distance = self.state_cal(self.gear_info,self.on_goal)
+        s, d_x, d_y, distance = self.state_cal(self.gear_info)
 
-        torque_sum = abs(s[0]) + abs(s[1])  # this sum is after normalize calculation
+        step_r = 1/(self.i + 1)
 
-        step_r = 0
-        if torque_sum >= self.old_torque:
-            step_r = -1 # do not return
-        else:
-            step_r = (self.old_torque - torque_sum)
-
-        o_t = self.old_torque
+        distance /= 5.6
         # done and reward, gear center align with pey center
         # torque can not be used as condition since in the simulation no tolerance, absolute torque==0 is hard
-        if  self.init_torque > o_t and distance<=self.threshold:
+        if  distance<=self.threshold:
             step_r = (5. + (self.max_steps - self.i)*1.5)    # ealier reach goal that has more reward
-            self.on_goal = 1
             done = True
         if self.i == self.max_steps:
             done = True
             step_r = -5
-        if self.init_torque <= o_t and torque_sum==0:
+        if distance>120:
             done = True
             step_r=-10.
 
-        self.old_torque = torque_sum # update the old torque
         self.total_reward += step_r
 
-        return s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'d_x':d_x,'d_y':d_y,'t_s':torque_sum,'o_s':o_t,'i_s':self.init_torque,'distance':distance}
+        return s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'d_x':d_x,'d_y':d_y,'distance':distance}
 
     def render(self):
         if self.viewer is None:
