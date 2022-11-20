@@ -1,3 +1,6 @@
+'''
+The env for using continous policy like ddpg, td3
+'''
 import numpy as np
 import pyglet
 from pyglet import shapes

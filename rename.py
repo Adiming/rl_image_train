@@ -1,3 +1,4 @@
+# rename image files
 import os
 
 path = os.getcwd()

@@ -1,7 +1,7 @@
 from stable_baselines3 import DDPG 
 from stable_baselines3.common.env_checker import check_env
 
-from env import PlaceEnv
+from env_torque import PlaceEnv
 from typing import Callable
 import os
 

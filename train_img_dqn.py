@@ -82,10 +82,10 @@ def create_envs(
 def img_train(
     train_env: Env,
     eval_env: Env,
-    num_eval_points: int = 10,
+    num_eval_points: int = 20,
     feature = 'CustomCNN',
     save_dir='models',
-    train_steps=5_00000,
+    train_steps=10_00000,
     gamma=0.9,
     learning_rate=1e-3
 ):

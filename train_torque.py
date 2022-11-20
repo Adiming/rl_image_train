@@ -1,5 +1,8 @@
+'''
+train file using torque as input 
+'''
 from stable_baselines3 import DDPG, PPO
-from env import PlaceEnv
+from env_torque import PlaceEnv
 import time
 import os
 import csv
@@ -19,7 +22,7 @@ file_path = os.path.join(path, file_name)
 
 # single epochs
 def test_train():
-
+    # decrease lr
     def linear_schedule(initial_value: float) -> Callable[[float], float]:
         def func(progress_remaining: float) -> float:
             """
@@ -100,7 +103,7 @@ def test_train_PPO():
 
     env.close()
 
-
+# record the trajectory points
 def predict_and_write():
     header = ["i","r","x","y","d"]
 
@@ -144,5 +147,5 @@ def predict_and_write():
 
 if __name__ == '__main__':
     # test_train_PPO()
-    # test_train()
-    predict_and_write()
+    test_train()
+    # predict_and_write()

@@ -1,9 +1,11 @@
+'''
+The env for using torque as input of agent
+'''
 import numpy as np
 import pyglet
 from pyglet import shapes
 import time
 import gym
-from sklearn import preprocessing
 
 # in pyglet the size unit is pixel
 class PlaceEnv(gym.Env):
@@ -76,11 +78,11 @@ class PlaceEnv(gym.Env):
         self.on_goal = 0    # whether stay on the target
         self.threshold = 0.3
         # random initial position of gear
-        # self.gear_info[0] = self.goal_x + np.random.uniform(low=-90.0,high=90.0)
-        # self.gear_info[1] = self.goal_y + np.random.uniform(low=-90.0,high=90.0)
+        self.gear_info[0] = self.goal_x + np.random.uniform(low=-90.0,high=90.0)
+        self.gear_info[1] = self.goal_y + np.random.uniform(low=-90.0,high=90.0)
 
-        self.gear_info[0] = self.goal_x + 112
-        self.gear_info[1] = self.goal_y 
+        # self.gear_info[0] = self.goal_x + 112
+        # self.gear_info[1] = self.goal_y 
 
         # calculate the torque as state
         s,_,_,_ = self.torque_cal(self.gear_info,self.on_goal)
@@ -186,15 +188,6 @@ class Viewer(pyglet.window.Window):
 
 if __name__ == '__main__':
     env = PlaceEnv()
-    # while True:
-    #     s = env.reset()
-    #     env.render()
-    #     time.sleep(0.5)
-    #     for i in range(400):
-    #         env.render()
-    #         s,_,_,info=env.step(env.sample_action())
-    #         print("state:{},d_x:{},d_y:{},step_r:{},i:{}".format
-    #                 (s,info['d_x'],info['d_y'],info['sr'],info['i']))
     env.reset()
     env.render()
     x = 10
