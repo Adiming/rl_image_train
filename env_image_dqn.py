@@ -18,7 +18,9 @@ ACTION_MAP = {
 class PlaceEnvImage(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    viewer = None
+    #viewer = None
+    viewer = 1
+
     move_x = 11.2
     move_y = 28
 
@@ -130,8 +132,9 @@ class PlaceEnvImage(gym.Env):
 
     def render(self):
         if self.viewer is None:
-            self.viewer = Viewer(self.gear_info)
-        self.viewer.render()
+            #self.viewer = Viewer(self.gear_info)
+            #self.viewer.render()
+            pass
 
     def sample_action(self):
         action = randrange(5)
@@ -139,7 +142,7 @@ class PlaceEnvImage(gym.Env):
     
     def close(self):
         return super().close()
-
+'''
 class Viewer(pyglet.window.Window):
     win_w = 600 # window size width
     win_h = 600 # window size high
@@ -181,7 +184,7 @@ class Viewer(pyglet.window.Window):
 
         self.gear_circle.x = x
         self.gear_circle.y = y
-
+'''
 if __name__ == '__main__':
     env = PlaceEnvImage()
     env.reset()
