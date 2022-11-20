@@ -82,7 +82,7 @@ def create_envs(
 def img_train(
     train_env: Env,
     eval_env: Env,
-    num_eval_points: int = 10,
+    num_eval_points: int = 20,
     feature = 'CustomCNN',
     save_dir='models',
     train_steps=10_00000,
@@ -110,7 +110,7 @@ def img_train(
     model = DQN(
         'CnnPolicy',
         train_env,
-        buffer_size=10000,
+        buffer_size=100000,
         batch_size=128,
         gamma=gamma,
         device='cuda' if torch.cuda.is_available() else 'cpu',

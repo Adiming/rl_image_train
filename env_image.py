@@ -8,9 +8,13 @@ import os
 
 # in pyglet the size unit is pixel
 class PlaceEnvImage(gym.Env):
-    metadata = {'render.modes': ['human']}
+    #metadata = {'render.modes': ['ansi']}
+    #metadata = {'render.modes': ['human']}
+
 
     viewer = None
+    #viewer = 1
+
     move_step = 8.4
     action_bound = [-8.4, 8.4]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
     # action_bound = [-5.6, 5.6]  # the movement range is between -3mm ~ 3mm -> 2.8 = 1mm
@@ -134,6 +138,7 @@ class PlaceEnvImage(gym.Env):
     def render(self):
         if self.viewer is None:
             self.viewer = Viewer(self.gear_info)
+            #pass
         self.viewer.render()
 
     def sample_action(self):

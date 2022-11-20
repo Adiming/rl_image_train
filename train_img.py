@@ -30,7 +30,7 @@ feature_mapping = {
     'CustomCNNLSTM': CustomCNNLSTM
 }
 
-file_name="TD3_img_1e4"
+file_name="ddpg_img_1e5"
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
@@ -82,11 +82,11 @@ def create_envs(
 def img_train(
     train_env: Env,
     eval_env: Env,
-    num_eval_points: int = 100,
+    num_eval_points: int = 2,
     feature = 'CustomCNN',
     # epochs=10,
     save_dir='models',
-    train_steps=10_000,
+    train_steps=10_0000,
     gamma=0.9,
     learning_rate=1e-3
 ):
@@ -106,10 +106,10 @@ def img_train(
     n_actions = train_env.action_space.shape[-1]
     action_noise = NormalActionNoise(mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions))
     
-    model = TD3(
+    model = DDPG(
         CnnPolicy,
         train_env,
-        buffer_size=100,
+        buffer_size=1000,
         batch_size=128,
         gamma=gamma,
         action_noise=action_noise,
@@ -203,7 +203,7 @@ def predict_and_write():
 
 
 if __name__ == '__main__':
-    # envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
-    # img_train(*envs)
+     envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
+     img_train(*envs)
 
-    predict_and_write()
+   # predict_and_write()
