@@ -11,7 +11,8 @@ import torch as th
 path = os.getcwd()
 path = os.path.join(path, "models")
 
-file_name="DDPG_test_1e6_gamma09_n"
+# file_name="DDPG_test_1e6_gamma09_n"
+file_name="dqn_img_1e6"
 
 file_path = os.path.join(path, file_name)
 # file_name="DDPG_test_1e6_ongoal"

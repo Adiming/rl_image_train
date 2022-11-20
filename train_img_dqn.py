@@ -82,7 +82,7 @@ def create_envs(
 def img_train(
     train_env: Env,
     eval_env: Env,
-    num_eval_points: int = 20,
+    num_eval_points: int = 10,
     feature = 'CustomCNN',
     save_dir='models',
     train_steps=5_00000,
@@ -207,7 +207,7 @@ def predict_and_write():
 
 
 if __name__ == '__main__':
-    # envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
-    # img_train(*envs)
+    envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
+    img_train(*envs)
 
-    predict_and_write()
+    # predict_and_write()
