@@ -3,7 +3,8 @@ import csv
 import numpy as np
 import pandas as pd
 
-file_name = "DDPG_test_1e6_gamma09_n" + ".csv"
+# file_name = "DDPG_test_1e6_gamma09_n" + ".csv"
+file_name = "dqn_img_1e6" + ".csv"
 plt.rcParams["figure.figsize"] = [7.00, 5.50]
 plt.rcParams["figure.autolayout"] = True
 columns = ["x", "y","i"]

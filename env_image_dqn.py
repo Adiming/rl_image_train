@@ -44,7 +44,7 @@ class PlaceEnvImage(gym.Env):
         self.image_path = os.path.join(os.getcwd(),"images")
 
     def state_cal(self,gx,gy):
-        y = gx # the sequency is opposite
+        y = gx # the index of image if (y,x)
         x = gy
 
         if x<=7 and y<=24 and x>=0 and y>=0:   
@@ -71,7 +71,7 @@ class PlaceEnvImage(gym.Env):
         self.x = gx
         self.y = gy
 
-        self.gear_info[0] = self.goal_x + (gx - 12)*11.2
+        self.gear_info[0] = self.goal_x + (12 - gx)*11.2
         self.gear_info[1] = self.goal_y + (gy - 4)*28
 
         # self.gear_info[0] = self.goal_x + 12*11.2
@@ -121,7 +121,7 @@ class PlaceEnvImage(gym.Env):
         if self.i == self.max_steps:
             done = True
             step_r = -5
-        if gy>7 and gx>24 and gy<0 and gx<0:
+        if gy>7 or gx>24 or gy<0 or gx<0:
             done = True
             step_r=-10.
 
@@ -134,9 +134,7 @@ class PlaceEnvImage(gym.Env):
         self.viewer.render()
 
     def sample_action(self):
-        action = np.zeros(2,dtype=np.float32)
-        action[0] = np.random.uniform(low=-self.move_step,high=self.move_step)
-        action[1] = np.random.uniform(low=-self.move_step,high=self.move_step)
+        action = randrange(5)
         return action
     
     def close(self):
@@ -186,15 +184,6 @@ class Viewer(pyglet.window.Window):
 
 if __name__ == '__main__':
     env = PlaceEnvImage()
-    # while True:
-    #     s = env.reset()
-    #     env.render()
-    #     time.sleep(0.5)
-    #     for i in range(400):
-    #         env.render()
-    #         s,_,_,info=env.step(env.sample_action())
-    #         print("state:{},d_x:{},d_y:{},step_r:{},i:{}".format
-    #                 (s,info['d_x'],info['d_y'],info['sr'],info['i']))
     env.reset()
     env.render()
     x = 10

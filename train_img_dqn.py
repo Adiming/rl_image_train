@@ -85,7 +85,7 @@ def img_train(
     num_eval_points: int = 10,
     feature = 'CustomCNN',
     save_dir='models',
-    train_steps=10_00000,
+    train_steps=5_00000,
     gamma=0.9,
     learning_rate=1e-3
 ):
@@ -126,7 +126,7 @@ def img_train(
     )
 
     # Creating callbacks for eval (reward over time) and checkpoints (saving the model in spec. frequency)
-    checkpoint_callback = CheckpointCallback(save_freq=100000, save_path="./logs/")
+    checkpoint_callback = CheckpointCallback(save_freq=train_steps/10, save_path="./logs/")
     eval_callback = EvalCallback(
         eval_env,
         best_model_save_path="./logs/best_model",
@@ -170,11 +170,12 @@ def predict_and_write():
     env = PlaceEnvImage()
 
     dir = os.getcwd()
-    # dir = os.path.join(dir,"models") 
-    dir = os.path.join(dir,"logs") 
+    dir = os.path.join(dir,"models") 
+    # dir = os.path.join(dir,"logs","best_model") 
+    # dir = os.path.join(dir,"logs") 
     # f_name = file_name + "_10000"
     f_name = file_name 
-    f_name = "rl_model_400000_steps"
+    # f_name = "best_model"
     file = os.path.join(dir,f_name)
     model = DQN.load(file,env=env)
     
@@ -206,7 +207,7 @@ def predict_and_write():
 
 
 if __name__ == '__main__':
-    envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
-    img_train(*envs)
+    # envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
+    # img_train(*envs)
 
-    # predict_and_write()
+    predict_and_write()
