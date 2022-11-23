@@ -10,7 +10,7 @@ from stable_baselines3.common.noise import NormalActionNoise
 import numpy as np
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
-from features import CustomCNN, CustomCNNBN, CustomCNNRes, CustomCNN128, CustomCNNLSTM
+#from features import CustomCNN, CustomCNNBN, CustomCNNRes, CustomCNN128, CustomCNNLSTM
 from tqdm import tqdm
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.callbacks import (
@@ -21,7 +21,7 @@ from stable_baselines3.common.callbacks import (
 import csv
 import time
 import os
-
+'''
 feature_mapping = {
     'CustomCNN': CustomCNN,
     'CustomCNN128': CustomCNN128,
@@ -29,8 +29,52 @@ feature_mapping = {
     'CustomCNNRes': CustomCNNRes,
     'CustomCNNLSTM': CustomCNNLSTM
 }
+'''
+from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from torch import nn
+import torch as th
 
-file_name="dqn_img_1e6"
+class CustomCNN(BaseFeaturesExtractor):
+    def __init__(self, observation_space, features_dim: int = 256):
+        super(CustomCNN, self).__init__(observation_space, features_dim)
+        n_input_channels = observation_space.shape[0]
+        # n_input_channels = 1
+        self.cnn = nn.Sequential(
+            # nn.Conv2d(n_input_channels, 64, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(n_input_channels, 32, kernel_size=1, stride=1, padding=0, bias=False),
+        )
+        self.cnn2 = nn.Sequential(
+            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, stride=4, padding=1),
+            nn.ReLU(),
+            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            # nn.ReLU(),
+            nn.Flatten(),
+        )
+        # Compute shape by doing one forward pass
+        with th.no_grad():
+            n_flatten = self.cnn2(self.cnn(th.as_tensor(observation_space.sample()[None]).float())).shape[1]
+
+        self.linear = nn.Sequential(
+            nn.Linear(n_flatten, features_dim),
+            nn.ReLU(),
+        )
+
+    def forward(self, observations: th.Tensor) -> th.Tensor:
+        return self.linear(self.cnn2(self.cnn(observations)))
+
+feature_mapping = {
+    'CustomCNN': CustomCNN
+    # 'CustomCNN128': CustomCNN128,
+    # 'CustomCNNBN': CustomCNNBN,
+    # 'CustomCNNRes': CustomCNNRes,
+    # 'CustomCNNLSTM': CustomCNNLSTM
+}
+
+file_name="dqn_img_5e5_nb"
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
@@ -85,7 +129,7 @@ def img_train(
     num_eval_points: int = 20,
     feature = 'CustomCNN',
     save_dir='models',
-    train_steps=10_00000,
+    train_steps=5_00000,
     gamma=0.9,
     learning_rate=1e-3
 ):
@@ -111,7 +155,7 @@ def img_train(
         'CnnPolicy',
         train_env,
         buffer_size=100000,
-        batch_size=128,
+        batch_size=32,
         gamma=gamma,
         device='cuda' if torch.cuda.is_available() else 'cpu',
         verbose=1,
@@ -206,7 +250,7 @@ def predict_and_write():
 
 
 if __name__ == '__main__':
-    envs = create_envs(num_training_envs=4, num_eval_envs=4)    # the num can up to 16, if possible keep eval and training env same
+    envs = create_envs(num_training_envs=1, num_eval_envs=1)    # the num can up to 16, if possible keep eval and training env same
     img_train(*envs)
 
     # predict_and_write()
