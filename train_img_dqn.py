@@ -21,15 +21,7 @@ from stable_baselines3.common.callbacks import (
 import csv
 import time
 import os
-'''
-feature_mapping = {
-    'CustomCNN': CustomCNN,
-    'CustomCNN128': CustomCNN128,
-    'CustomCNNBN': CustomCNNBN,
-    'CustomCNNRes': CustomCNNRes,
-    'CustomCNNLSTM': CustomCNNLSTM
-}
-'''
+
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 import torch as th
@@ -40,18 +32,13 @@ class CustomCNN(BaseFeaturesExtractor):
         n_input_channels = observation_space.shape[0]
         # n_input_channels = 1
         self.cnn = nn.Sequential(
-            # nn.Conv2d(n_input_channels, 64, kernel_size=1, stride=1, padding=0, bias=False),
             nn.Conv2d(n_input_channels, 32, kernel_size=1, stride=1, padding=0, bias=False),
         )
         self.cnn2 = nn.Sequential(
-            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
             nn.Conv2d(32, 32, kernel_size=3, stride=4, padding=1),
             nn.ReLU(),
-            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
-            # nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
-            # nn.ReLU(),
             nn.Flatten(),
         )
         # Compute shape by doing one forward pass
@@ -68,13 +55,9 @@ class CustomCNN(BaseFeaturesExtractor):
 
 feature_mapping = {
     'CustomCNN': CustomCNN
-    # 'CustomCNN128': CustomCNN128,
-    # 'CustomCNNBN': CustomCNNBN,
-    # 'CustomCNNRes': CustomCNNRes,
-    # 'CustomCNNLSTM': CustomCNNLSTM
 }
 
-file_name="dqn_img_5e5_nb"
+file_name="dqn_img_5e5_ni"
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
@@ -155,7 +138,7 @@ def img_train(
         'CnnPolicy',
         train_env,
         buffer_size=100000,
-        batch_size=32,
+        batch_size=128,
         gamma=gamma,
         device='cuda' if torch.cuda.is_available() else 'cpu',
         verbose=1,
@@ -190,23 +173,6 @@ def img_train(
 
     model.save(f'{save_dir}/{file_name}_{train_steps}')
     print("saved model successfully")
-
-    # steps = 0
-    # for e in range(epochs):
-
-    #     model.learn(total_timesteps=train_steps,
-    #                 # progress_bar=True,
-    #                 log_interval=100,
-    #                 tb_log_name=file_name,
-    #                 callback=callback,
-    #                 reset_num_timesteps=False
-    #     )
-
-    #     steps += train_steps
-
-    #     mean_reward,_ = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
-
-    #     model.save(f'{save_dir}/{e + 1}_{steps}_{int(mean_reward)}')
 
 def predict_and_write():
     header = ["i","r","x","y","gx","gy"]

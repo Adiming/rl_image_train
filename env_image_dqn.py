@@ -21,7 +21,7 @@ class PlaceEnvImage(gym.Env):
     #viewer = None
     viewer = 1
 
-    move_x = 11.2
+    move_x = 28
     move_y = 28
 
     goal_x = 300  # halb of the window's width
@@ -49,7 +49,7 @@ class PlaceEnvImage(gym.Env):
         y = gx # the sequency is opposite
         x = gy
 
-        if x<=7 and y<=24 and x>=0 and y>=0:   
+        if x<=8 and y<=8 and x>=0 and y>=0:   
             # read a image as state from corresponding position (chose the closest one)
             img_name = str(x) + "_" + str(y) + '.png'
             img_path = os.path.join(self.image_path, img_name)
@@ -67,14 +67,14 @@ class PlaceEnvImage(gym.Env):
         self.total_reward = 0
         self.threshold = 0.3
         # random initial position of gear
-        gx = randrange(25)
-        gy = randrange(8)
+        gx = randrange(9)
+        gy = randrange(9)
 
         self.x = gx
         self.y = gy
 
-        self.gear_info[0] = self.goal_x + (gx - 12)*11.2
-        self.gear_info[1] = self.goal_y + (gy - 4)*28
+        self.gear_info[0] = self.goal_x + (gx - 4)*self.move_x
+        self.gear_info[1] = self.goal_y + (gy - 4)*self.move_y
 
         # self.gear_info[0] = self.goal_x + 12*11.2
         # self.gear_info[1] = self.goal_y 
@@ -117,13 +117,13 @@ class PlaceEnvImage(gym.Env):
 
         step_r = 0
 
-        if  gx==12 and gy==4:
+        if  gx==4 and gy==4:
             step_r = (1. + (self.max_steps - self.i))    # ealier reach goal that has more reward
             done = True
         if self.i == self.max_steps:
             done = True
             step_r = -5
-        if gy>7 or gx>24 or gy<0 or gx<0:
+        if gy>8 or gx>8 or gy<0 or gx<0:
             done = True
             step_r=-10.
 
