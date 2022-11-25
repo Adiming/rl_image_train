@@ -29,9 +29,8 @@ import torch as th
 class CustomCNN(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim: int = 256):
         super(CustomCNN, self).__init__(observation_space, features_dim)
-        # n_input_channels = observation_space.shape[0]
-        # n_input_channels = observation_space.shape[2]
-        n_input_channels = 4
+        n_input_channels = observation_space.shape[0]
+        # n_input_channels = 4
         self.cnn = nn.Sequential(
             nn.Conv2d(n_input_channels, 32, kernel_size=1, stride=1, padding=0, bias=False),
         )

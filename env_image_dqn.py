@@ -43,9 +43,9 @@ class PlaceEnvImage(gym.Env):
         # self.observation_space = gym.spaces.Box(
         # low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
         self.observation_space = gym.spaces.Box(
-        low=0, high=255, shape=(4, 84, 84), dtype=np.uint8)
+        low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
 
-        self.stack_size = 4 # We stack 4 frames
+        # self.stack_size = 4 # We stack 4 frames
 
         self.image_path = os.path.join(os.getcwd(),"images")
         
@@ -87,7 +87,7 @@ class PlaceEnvImage(gym.Env):
             img = cv2.imread(img_path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
             img = cv2.resize(img, (84,84), interpolation= cv2.INTER_LINEAR) # resize the image
-            # img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
+            img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
         else:
             img = np.zeros((84,84), dtype=np.uint8)
 
@@ -111,14 +111,14 @@ class PlaceEnvImage(gym.Env):
         # self.gear_info[1] = self.goal_y 
         
         # Initialize deque with zero-images one array for each image
-        self.s  =  deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
+        # self.s  =  deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
 
         # image frame as state
-        img = self.state_cal(gx,gy)
-        new_episode = True
-        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
+        s = self.state_cal(gx,gy)
+        # new_episode = True
+        # _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
-        return self.s
+        return s
 
     def step(self, action):
         if isinstance(action, str) and action in ('up', 'down', 'left', 'right'):
@@ -149,9 +149,9 @@ class PlaceEnvImage(gym.Env):
         done = False
 
         # img as state
-        img = self.state_cal(gx,gy)
-        new_episode = False
-        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
+        s = self.state_cal(gx,gy)
+        # new_episode = False
+        # _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
         step_r = 0
 
