@@ -29,7 +29,7 @@ class PlaceEnvImage(gym.Env):
     gear_size = 112 # the radium of gear
     peg_size = 28 # the radium of peg, around 10cm
 
-    max_steps = 20 # max step pre epoch
+    max_steps = 50 # max step pre epoch
 
     def __init__(self):
         # save the coordinate of gear center point
@@ -42,10 +42,11 @@ class PlaceEnvImage(gym.Env):
        
         # self.observation_space = gym.spaces.Box(
         # low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
-        self.observation_space = gym.spaces.Box(
-        low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
 
-        # self.stack_size = 4 # We stack 4 frames
+        self.observation_space = gym.spaces.Box(
+        low=0, high=255, shape=(4, 84, 84), dtype=np.uint8)
+
+        self.stack_size = 4 # We stack 4 frames
 
         self.image_path = os.path.join(os.getcwd(),"images")
         
@@ -80,15 +81,16 @@ class PlaceEnvImage(gym.Env):
         y = gx # the sequency is opposite
         x = gy
 
-        if x<=8 and y<=8 and x>=0 and y>=0:   
+        if x<30 and y<35 and x>=0 and y>=0:   
             # read a image as state from corresponding position (chose the closest one)
             img_name = str(x) + "_" + str(y) + '.png'
             img_path = os.path.join(self.image_path, img_name)
             img = cv2.imread(img_path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
             img = cv2.resize(img, (84,84), interpolation= cv2.INTER_LINEAR) # resize the image
-            img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
+            # img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
         else:
+            # img = np.zeros((84,84,1), dtype=np.uint8)
             img = np.zeros((84,84), dtype=np.uint8)
 
         return img
@@ -96,7 +98,6 @@ class PlaceEnvImage(gym.Env):
     def reset(self):
         self.i = 0
         self.total_reward = 0
-        self.threshold = 0.3
         # random initial position of gear
         gx = randrange(30)
         gy = randrange(35)
@@ -111,14 +112,15 @@ class PlaceEnvImage(gym.Env):
         # self.gear_info[1] = self.goal_y 
         
         # Initialize deque with zero-images one array for each image
-        # self.s  =  deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
+        self.s  =  deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
 
         # image frame as state
-        s = self.state_cal(gx,gy)
-        # new_episode = True
-        # _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
+        # s = self.state_cal(gx,gy)
+        img = self.state_cal(gx,gy)
+        new_episode = True
+        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
-        return s
+        return self.s
 
     def step(self, action):
         if isinstance(action, str) and action in ('up', 'down', 'left', 'right'):
@@ -149,11 +151,13 @@ class PlaceEnvImage(gym.Env):
         done = False
 
         # img as state
-        s = self.state_cal(gx,gy)
-        # new_episode = False
-        # _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
+        # s = self.state_cal(gx,gy)
+        img = self.state_cal(gx,gy)
+        new_episode = False
+        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
-        step_r = 0
+        # step_r = 0
+        step_r = 1 / (abs(gx-14)+abs(gy-17)+1)
 
         if  gx==14 and gy==17:
             step_r = (1. + (self.max_steps - self.i))    # ealier reach goal that has more reward

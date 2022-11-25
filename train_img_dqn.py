@@ -1,5 +1,5 @@
 from gym import Env
-from stable_baselines3 import DDPG, TD3, DQN
+from stable_baselines3 import DDPG, TD3, DQN,PPO
 import torch
 from env_image_dqn import PlaceEnvImage
 from typing import Callable
@@ -29,8 +29,8 @@ import torch as th
 class CustomCNN(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim: int = 256):
         super(CustomCNN, self).__init__(observation_space, features_dim)
-        n_input_channels = observation_space.shape[0]
-        # n_input_channels = 4
+        # n_input_channels = observation_space.shape[0]
+        n_input_channels = 4
         self.cnn = nn.Sequential(
             nn.Conv2d(n_input_channels, 32, kernel_size=1, stride=1, padding=0, bias=False),
         )
@@ -57,7 +57,7 @@ feature_mapping = {
     'CustomCNN': CustomCNN
 }
 
-file_name="dqn_img_5e5_1e3"
+file_name="dqn_img_1e6_ni"
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
@@ -112,7 +112,7 @@ def img_train(
     num_eval_points: int = 20,
     feature = 'CustomCNN',
     save_dir='models',
-    train_steps=5_00000,
+    train_steps=10_00000,
     gamma=0.9,
     learning_rate=1e-3
 ):
