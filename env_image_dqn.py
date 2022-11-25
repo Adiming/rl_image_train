@@ -6,6 +6,7 @@ import gym
 import cv2
 import os
 from random import randrange
+from collections import deque
 
 ACTION_MAP = {
     0: 'up',
@@ -40,10 +41,41 @@ class PlaceEnvImage(gym.Env):
         # up, down, left, right
         self.action_space = gym.spaces.Discrete(4)
        
+        # self.observation_space = gym.spaces.Box(
+        # low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
         self.observation_space = gym.spaces.Box(
-        low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
+        low=0, high=255, shape=(84, 84, 4), dtype=np.uint8)
+
+        self.stack_size = 4 # We stack 4 frames
 
         self.image_path = os.path.join(os.getcwd(),"images")
+        
+    def stack_frames(self,stacked_frames, state, is_new_episode):
+        # Preprocess frame
+        # frame = preprocess_frame(state)
+        frame = state
+        
+        if is_new_episode:
+            # Clear our stacked_frames
+            stacked_frames = deque([np.zeros((84,84), dtype='uint8') for i in range(self.stack_size)], maxlen=4)
+            
+            # Because we're in a new episode, copy the same frame 4x
+            stacked_frames.append(frame)
+            stacked_frames.append(frame)
+            stacked_frames.append(frame)
+            stacked_frames.append(frame)
+            
+            # Stack the frames
+            stacked_state = np.stack(stacked_frames, axis=2)
+            
+        else:
+            # Append frame to deque, automatically removes the oldest frame
+            stacked_frames.append(frame)
+
+            # Build the stacked state (first dimension specifies different frames)
+            stacked_state = np.stack(stacked_frames, axis=2) 
+        
+        return stacked_state, stacked_frames
 
     def state_cal(self,gx,gy):
         y = gx # the sequency is opposite
@@ -67,22 +99,27 @@ class PlaceEnvImage(gym.Env):
         self.total_reward = 0
         self.threshold = 0.3
         # random initial position of gear
-        gx = randrange(9)
-        gy = randrange(9)
+        gx = randrange(30)
+        gy = randrange(35)
 
         self.x = gx
         self.y = gy
 
-        self.gear_info[0] = self.goal_x + (gx - 4)*self.move_x
-        self.gear_info[1] = self.goal_y + (gy - 4)*self.move_y
+        self.gear_info[0] = self.goal_x + (gx - 14)*self.move_x
+        self.gear_info[1] = self.goal_y + (gy - 17)*self.move_y
 
         # self.gear_info[0] = self.goal_x + 12*11.2
         # self.gear_info[1] = self.goal_y 
+        
+        # Initialize deque with zero-images one array for each image
+        self.s  =  deque([np.zeros((84,84), dtype='uint8') for i in range(self.stack_size)], maxlen=4)
 
         # image frame as state
-        s = self.state_cal(gx,gy)
+        img = self.state_cal(gx,gy)
+        new_episode = True
+        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
-        return s
+        return self.s
 
     def step(self, action):
         if isinstance(action, str) and action in ('up', 'down', 'left', 'right'):
@@ -112,23 +149,25 @@ class PlaceEnvImage(gym.Env):
         self.i += 1 # calculate the step number
         done = False
 
-        # calculate the torque as state
-        s = self.state_cal(gx,gy)
+        # img as state
+        img = self.state_cal(gx,gy)
+        new_episode = False
+        _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
         step_r = 0
 
-        if  gx==4 and gy==4:
+        if  gx==14 and gy==17:
             step_r = (1. + (self.max_steps - self.i))    # ealier reach goal that has more reward
             done = True
         if self.i == self.max_steps:
             done = True
             step_r = -5
-        if gy>8 or gx>8 or gy<0 or gx<0:
+        if gy>35 or gx>30 or gy<0 or gx<0:
             done = True
             step_r=-10.
 
         self.total_reward += step_r
-        return s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'g_x':gx,'g_y':gy}
+        return self.s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'g_x':gx,'g_y':gy}
 
     def render(self):
         if self.viewer is None:
