@@ -20,10 +20,9 @@ class PlaceEnvImage(gym.Env):
     metadata = {'render.modes': ['human']}
 
     #viewer = None
-    viewer = 1
 
-    move_x = 28
-    move_y = 28
+    move_x = 5.6
+    move_y = 5.6
 
     goal_x = 300  # halb of the window's width
     goal_y = 300  # halb of the window's high
@@ -44,7 +43,7 @@ class PlaceEnvImage(gym.Env):
         # self.observation_space = gym.spaces.Box(
         # low=0, high=255, shape=(84, 84, 1), dtype=np.uint8)
         self.observation_space = gym.spaces.Box(
-        low=0, high=255, shape=(84, 84, 4), dtype=np.uint8)
+        low=0, high=255, shape=(4, 84, 84), dtype=np.uint8)
 
         self.stack_size = 4 # We stack 4 frames
 
@@ -57,7 +56,7 @@ class PlaceEnvImage(gym.Env):
         
         if is_new_episode:
             # Clear our stacked_frames
-            stacked_frames = deque([np.zeros((84,84), dtype='uint8') for i in range(self.stack_size)], maxlen=4)
+            stacked_frames = deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
             
             # Because we're in a new episode, copy the same frame 4x
             stacked_frames.append(frame)
@@ -88,9 +87,9 @@ class PlaceEnvImage(gym.Env):
             img = cv2.imread(img_path)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
             img = cv2.resize(img, (84,84), interpolation= cv2.INTER_LINEAR) # resize the image
-            img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
+            # img = np.expand_dims(img, -1)   # reshape the shape -> grayscale only has one channel (84,84) -> need to extend one dim
         else:
-            img = np.zeros((84,84,1), dtype='uint8')
+            img = np.zeros((84,84), dtype=np.uint8)
 
         return img
         
@@ -112,7 +111,7 @@ class PlaceEnvImage(gym.Env):
         # self.gear_info[1] = self.goal_y 
         
         # Initialize deque with zero-images one array for each image
-        self.s  =  deque([np.zeros((84,84), dtype='uint8') for i in range(self.stack_size)], maxlen=4)
+        self.s  =  deque([np.zeros((84,84), dtype=np.uint8) for i in range(self.stack_size)], maxlen=4)
 
         # image frame as state
         img = self.state_cal(gx,gy)
