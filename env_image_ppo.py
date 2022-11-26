@@ -120,15 +120,19 @@ class PlaceEnvImage(gym.Env):
         img = self.state_cal(gx,gy)
         new_episode = True
         _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
-
-        return self.s
+        
+        s = np.asarray(list(self.s))
+        return s
 
     def step(self, action):
         # every step is between -0.005~0.005, one image is 0.001 step
         action = action*5 
-        
-        gx = self.x + round(action[0])
-        gy = self.y + round(action[1])
+       
+        self.x += round(action[0])
+        self.y += round(action[1])
+
+        gx = self.x
+        gy = self.y 
         # time.sleep(1)
         self.i += 1 # calculate the step number
         done = False
@@ -138,9 +142,10 @@ class PlaceEnvImage(gym.Env):
         img = self.state_cal(gx,gy)
         new_episode = False
         _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
-
+        
+        s = np.asarray(list(self.s))
         # step_r = 0
-        step_r = 1 / (abs(gx-14)+abs(gy-17)+1)
+        step_r = -(abs(gx-14)/30+abs(gy-17)/35)/2
 
         if  gx==14 and gy==17:
             step_r = (1. + (self.max_steps - self.i))    # ealier reach goal that has more reward
@@ -153,7 +158,7 @@ class PlaceEnvImage(gym.Env):
             step_r=-10.
 
         self.total_reward += step_r
-        return self.s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'g_x':gx,'g_y':gy}
+        return s, step_r, done, {'i': self.i, 'x':self.gear_info[0],'y':self.gear_info[1],'g_x':gx,'g_y':gy}
 
     def render(self):
         if self.viewer is None:
