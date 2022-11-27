@@ -157,7 +157,8 @@ class PlaceEnvImage(gym.Env):
         _,self.s = self.stack_frames(stacked_frames=self.s,state=img,is_new_episode=new_episode)
 
         # step_r = 0
-        step_r = 1 / (abs(gx-14)+abs(gy-17)+1)
+        #step_r = 1 / (abs(gx-14)+abs(gy-17)+1)
+        step_r = -(abs(gx-14)/30+abs(gy-17)/35)/2
 
         if  gx==14 and gy==17:
             step_r = (1. + (self.max_steps - self.i))    # ealier reach goal that has more reward

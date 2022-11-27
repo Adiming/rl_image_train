@@ -57,7 +57,7 @@ feature_mapping = {
     'CustomCNN': CustomCNN
 }
 
-file_name="dqn_img_1e6_ni"
+file_name="dqn_img_1e6"
 
 class TqdmCallback(BaseCallback):
     def __init__(self):
